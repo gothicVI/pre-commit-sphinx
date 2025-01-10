@@ -2,7 +2,7 @@
 """Pre-commit hooks to check that sphinx docs build correctly."""
 
 import argparse
-import os
+import subprocess  # nosec
 import sys
 from collections.abc import Sequence
 from typing import Literal
@@ -22,9 +22,9 @@ def build(builder: str, src_dir: str, output_dir: str, flags: list[str]) -> Lite
     """Invoke ``sphinx-build`` to build the docs."""
     # Run Sphinx to build the documentation
     flags = [i.strip('"') for i in flags]
-    ret: int = os.system(  # nosec # noqa: S605
-        f"sphinx-build {' '.join(flags)} --builder {builder} {src_dir} {output_dir}"
-    )
+    command: list[str] = ["sphinx-build", *flags, "--builder", builder, src_dir, output_dir]
+    output: subprocess.CompletedProcess = subprocess.run(command, check=False)  # nosec # noqa: S603
+    ret: int = output.returncode
 
     # It's very weird that pre-commit marks this as 'PASSED' if I return an error code 512...! Workaround:
     return 0 if ret == 0 else 1
