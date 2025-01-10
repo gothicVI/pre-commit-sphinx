@@ -1,0 +1,322 @@
+stages:
+  - build_image
+  - run_checks
+
+variables:
+  # Use the overlayfs driver for improved performance
+  DOCKER_DRIVER: overlay2
+  # Tell docker CLI how to talk to Docker daemon - see
+  # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-in-docker-executor
+  DOCKER_HOST: tcp://thedockerhost:2375/
+  DOCKER_TLS_CERTDIR: ""
+  IMAGE_NAME: ${CI_REGISTRY_IMAGE}:${CI_PROJECT_NAME}_${CI_COMMIT_SHA}
+  IMAGE_NAME_LATEST: ${CI_REGISTRY_IMAGE}:${CI_PROJECT_NAME}_latest
+
+build_image:
+  stage: build_image
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - .gitlab-ci.yml
+        - .pre-commit-config.yaml
+        - Dockerfile
+        - pylintrc
+        - pyproject.toml
+        - requirements.txt
+        - setup.cfg
+      when: manual
+      allow_failure: true
+  # This part is due to:
+  # - https://www.youtube.com/watch?v=7I6tHw68DMQ
+  # - https://stackoverflow.com/a/61106578/9590059
+  image:
+    name: docker
+  services:
+    - name: docker:dind
+      alias: thedockerhost
+  before_script:
+    # log into the reggistry
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  script:
+    # pull a potentially already existing image
+    - docker pull ${IMAGE_NAME_LATEST} || true
+    # build the image - tag it using the commit_sha & using latest
+    - docker build --cache-from ${IMAGE_NAME_LATEST} --tag ${IMAGE_NAME} --tag ${IMAGE_NAME_LATEST} .
+    # push the image to the registy
+    - docker push ${IMAGE_NAME}
+    - docker push ${IMAGE_NAME_LATEST}
+
+check_buildability:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - pip install pip build
+  script:
+    - python3 -m build
+    - python3 -m pip install --break-system-packages --upgrade --user -e .
+
+# shellcheck:
+#   stage: run_checks
+#   only:
+#     - main
+#     - merge_requests
+#   image:
+#     name: koalaman/shellcheck-alpine:latest
+#   before_script:
+#     - apk update && apk add git
+#   script:
+#     - git ls-files --exclude='*.sh' --ignored -c -z | xargs -0r shellcheck
+
+pre_commit_codespell:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  script:
+    - pre-commit run codespell --all-files
+
+pre_commit_meta:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  script:
+    - pre-commit run check-hooks-apply --all-files
+    - pre-commit run check-useless-excludes --all-files
+
+pre_commit_update:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  script:
+    - pre-commit run pre-commit-update --all-files
+  allow_failure: true
+
+pre_commit_builtin:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  script:
+    - pre-commit run check-added-large-files --all-files
+    - pre-commit run check-ast --all-files
+    - pre-commit run check-builtin-literals --all-files
+    - pre-commit run check-case-conflict --all-files
+    - pre-commit run check-executables-have-shebangs --all-files
+    # - pre-commit run check-json --all-files
+    - pre-commit run check-merge-conflict --all-files
+    - pre-commit run check-shebang-scripts-are-executable --all-files
+    - pre-commit run check-toml --all-files
+    # - pre-commit run check-xml --all-files
+    - pre-commit run check-yaml --all-files
+    - pre-commit run debug-statements --all-files
+    - pre-commit run end-of-file-fixer --all-files
+    - pre-commit run mixed-line-ending --all-files
+    - pre-commit run no-commit-to-branch --all-files
+    # - pre-commit run pretty-format-json --all-files
+    - pre-commit run requirements-txt-fixer --all-files
+    # - pre-commit run sort-simple-yaml --all-files
+    - pre-commit run trailing-whitespace --all-files
+
+pygrep_hooks:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  script:
+    - pre-commit run python-check-blanket-noqa --all-files
+    - pre-commit run python-check-blanket-type-ignore --all-files
+    - pre-commit run python-check-mock-methods --all-files
+    - pre-commit run python-no-eval --all-files
+    - pre-commit run python-no-log-warn --all-files
+    - pre-commit run python-use-type-annotations --all-files
+    # - pre-commit run rst-backticks --all-files
+    # - pre-commit run rst-directive-colons --all-files
+    # - pre-commit run rst-inline-touching-normal --all-files
+    - pre-commit run text-unicode-replacement-char --all-files
+
+pre_commit_autopep8:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - autopep8 --version
+  script:
+    - pre-commit run autopep8 --all-files
+
+pre_commit_bandit:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - bandit --version
+  script:
+    - pre-commit run bandit --all-files
+
+pre_commit_pyupgrade:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - pyupgrade -h
+  script:
+    - pre-commit run pyupgrade --all-files
+
+pre_commit_black:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - black --version
+  script:
+    - pre-commit run black --all-files
+
+# pre_commit_rstcheck:
+#   stage: run_checks
+#   only:
+#     - main
+#     - merge_requests
+#   image:
+#     name: ${IMAGE_NAME_LATEST}
+#   before_script:
+#     - rstcheck --version
+#   script:
+#     - pre-commit run rstcheck --all-files
+
+pre_commit_isort:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - isort --version
+  script:
+    - pre-commit run isort --all-files
+
+pre_commit_flake8:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - flake8 --version
+  script:
+    - pre-commit run flake8 --all-files
+
+pre_commit_pycodestyle:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - pycodestyle --version
+  script:
+    - pre-commit run pycodestyle --all-files
+
+pre_commit_pydocstyle:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - pydocstyle --version
+  script:
+    - pre-commit run pydocstyle --all-files
+
+pre_commit_pylint:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - pylint --version
+  script:
+    - pre-commit run pylint --all-files
+
+pre_commit_sphinx-lint:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - sphinx-lint --version
+  script:
+    - pre-commit run sphinx-lint --all-files
+
+pre_commit_mypy:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - mypy --version
+  script:
+    - pre-commit run mypy --all-files
+
+pre_commit_pyright:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - node --version
+    - npm --version
+    - pyright --version
+  script:
+    - pre-commit run pyright --all-files
+
+pre_commit_ruff:
+  stage: run_checks
+  only:
+    - main
+    - merge_requests
+  image:
+    name: ${IMAGE_NAME_LATEST}
+  before_script:
+    - ruff --version
+  script:
+    - pre-commit run ruff --all-files
