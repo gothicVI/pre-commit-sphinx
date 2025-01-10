@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pre_commit_sphinx"
+version = "0.1.0"
+authors = [
+  { name="Tom Clark (thclark)" },
+  { name="Sebastian Steinbeißer", email="Sebastian.Steinbeisser@lrz.de" },
+  { name="Alexander Zeller", email="Alexander.Zeller@lrz.de" },
+]
+description = "Pre-commit hooks to check that sphinx docs build correctly."
+license = { file = "LICENSE" }
+readme = "README.md"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.scripts]
+build-docs = "pre_commit_sphinx.build_docs:main"
+
+[tool.autopep8]
+max_line_length = 120
+in-place = true
+recursive = true
+aggressive = 3
+
+[tool.bandit]
+exclude_dirs = ["*user_auth.py"]
+
+[tool.bandit.assert_used]
+skips = ["*/test_*.py"]
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "COM812", "C901",
+  "D203", "D212", "D413",
+  "ERA001",
+  "FBT001", "FBT002",
+  "PLR0912", "PLR0913", "PLR0915", "PLR2004",
+  "PTH123",
+  "S108", "S501",
+]
