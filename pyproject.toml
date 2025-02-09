@@ -37,6 +37,33 @@ skips = ["*/test_*.py"]
 line-length = 120
 target-version = ['py311']
 
+[tool.pylint]
+disable = [
+  "C0302", # too many lines
+  "C0325", # superfluous-parens
+  "R0801", # duplicate-code
+  "R0912", # too-many-branches
+  "R0913", # too-many-arguments
+  "R0914", # too-many-locals
+  "R0915", # too-many-statements
+]
+max-line-length = 120
+ignore = [".git", "__pycache__"]
+j = 0
+reports = true
+
+[tool.isort]
+line_length = 120
+profile = "black"
+force_grid_wrap = 2
+multi_line_output = 3
+
+[tool.mypy]
+exclude = "(.git|__pycache__)"
+
+[tool.pydocstyle]
+convention = "numpy"
+
 [tool.ruff]
 line-length = 120
 target-version = "py311"
