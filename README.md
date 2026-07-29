@@ -10,7 +10,7 @@ Builds documentation using sphinx, returns PASSED to pre-config if the documenta
 
 Use in your `.pre-commit-config.yaml` file like:
 ```yaml
-  - repo: https://github.com/thclark/pre-commit-sphinx
+  - repo: https://github.com/gothicVI/pre-commit-sphinx
     rev: 0.2.0
     hooks:
       - id: build-docs
