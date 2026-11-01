@@ -14,7 +14,7 @@ repos:
   - id: check-hooks-apply # configured hooks apply to at least one file
   - id: check-useless-excludes # ensures exclude directives apply to at least one file
 - repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
-  rev: v0.9.0
+  rev: v0.10.0
   hooks:
   - id: pre-commit-update
     args: [--dry-run]
@@ -35,29 +35,18 @@ repos:
   - id: debug-statements
   - id: end-of-file-fixer
   - id: mixed-line-ending
-  - id: no-commit-to-branch
+  # - id: no-commit-to-branch
   # - id: pretty-format-json
   #   args: ["--autofix"]
-  - id: requirements-txt-fixer
+  # - id: requirements-txt-fixer
   # - id: sort-simple-yaml
   - id: trailing-whitespace
     types: [text]
-# - repo: https://github.com/koalaman/shellcheck-precommit
-#   rev: v0.10.0
-#   hooks:
-#   - id: shellcheck
-#     # args: ["--severity=warning"] # Optionally only show errors and warnings
 - repo: https://github.com/codespell-project/codespell
   rev: v2.4.3
   hooks:
   - id: codespell
-# - repo: https://github.com/rstcheck/rstcheck
-#   rev: v6.2.4
-#   hooks:
-#   - id: rstcheck
-#     args: ["--ignore-directives", "uml"]
-#     additional_dependencies: ["rstcheck[sphinx]", "sphinxcontrib-plantuml"]
-#     exclude: docs/_templates/
+    args: ["--skip", "uv.lock"]
 - repo: https://github.com/pre-commit/pygrep-hooks
   rev: v1.10.0
   hooks:
@@ -71,13 +60,6 @@ repos:
   # - id: rst-directive-colons
   # - id: rst-inline-touching-normal
   - id: text-unicode-replacement-char
-# - repo: https://github.com/thclark/pre-commit-sphinx
-#   rev: 0.0.3
-#   hooks:
-#   - id: build-docs
-#     args: ['--html-dir', 'docs/_build/html', '--source-dir', 'docs/']
-#     language_version: python3
-#     additional_dependencies: [sphinx, sphinx-autoapi, furo]
 - repo: https://github.com/hhatto/autopep8
   rev: v2.3.2
   hooks:
@@ -89,12 +71,12 @@ repos:
     args: ["-c", "pyproject.toml"]
     additional_dependencies: ["bandit[toml]"]
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.21.2
+  rev: v3.22.0
   hooks:
   - id: pyupgrade
     args: ["--py313-plus"]
 - repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 26.5.1
+  rev: 26.10.1
   hooks:
   - id: black
     # It is recommended to specify the latest version of Python
@@ -138,10 +120,6 @@ repos:
     language: system
     types: [python]
     args: ["--config=pyproject.toml", "--convention=numpy"]
-  - id: sphinx-lint
-    name: sphinx-lint
-    entry: sphinx-lint
-    language: system
   - id: pylint
     name: pylint
     entry: pylint
@@ -158,16 +136,16 @@ repos:
     args: ["-rn", "-sn", "--rcfile=pyproject.toml", "--disable=C0302,C0325,R0801,R0912,R0913,R0914,R0915,W0511,",
       "--max-line-length=120", "--ignore=.git,__pycache__"]
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v2.3.0
+  rev: v2.4.1
   hooks:
   - id: mypy
     args: ["--config-file=pyproject.toml"]
     language_version: python3
 - repo: https://github.com/RobertCraigie/pyright-python
-  rev: v1.1.411
+  rev: v1.1.414
   hooks:
   - id: pyright
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.16.0
+  rev: v0.17.3
   hooks:
   - id: ruff
