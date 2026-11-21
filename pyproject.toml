@@ -15,6 +15,33 @@ license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.14"
 
+[dependency-groups]
+dev = [
+    "autopep8>=2.3.2",
+    "bandit>=1.9.4",
+    "black>=26.10.1",
+    "codespell>=2.4.3",
+    "flake8>=7.5.0",
+    "flake8-bugbear>=26.10.27",
+    "furo>=2025.12.19",
+    "isort>=9.0.2",
+    "mypy>=2.4.1",
+    "pep8-naming>=0.15.1",
+    "pre-commit>=4.7.0",
+    "pre-commit-update>=0.10.0",
+    "pycodestyle>=2.15.0",
+    "pydocstyle>=6.3.0",
+    "pyflakes>=4.1.0",
+    "pylint>=4.1.3",
+    "pyright>=1.1.414",
+    "pyupgrade>=3.22.0",
+    "rstcheck>=6.3.0",
+    "ruff>=0.17.3",
+]
+
+[tool.uv]
+exclude-newer = "72 hours"
+
 [project.scripts]
 build-docs = "pre_commit_sphinx.build_docs:main"
 
@@ -69,28 +96,4 @@ ignore = [
   "PLR0912", "PLR0913", "PLR0915", "PLR2004",
   "PTH123",
   "S108", "S501",
-]
-
-[dependency-groups]
-dev = [
-    "autopep8>=2.3.2",
-    "bandit>=1.9.4",
-    "black>=26.10.1",
-    "codespell>=2.4.3",
-    "flake8>=7.5.0",
-    "flake8-bugbear>=26.10.27",
-    "furo>=2025.12.19",
-    "isort>=9.0.2",
-    "mypy>=2.4.1",
-    "pep8-naming>=0.15.1",
-    "pre-commit>=4.7.0",
-    "pre-commit-update>=0.10.0",
-    "pycodestyle>=2.15.0",
-    "pydocstyle>=6.3.0",
-    "pyflakes>=4.1.0",
-    "pylint>=4.1.3",
-    "pyright>=1.1.414",
-    "pyupgrade>=3.22.0",
-    "rstcheck>=6.3.0",
-    "ruff>=0.17.3",
 ]
